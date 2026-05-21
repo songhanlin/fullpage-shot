@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/gen-icons.mjs",
-    "build": "node scripts/gen-icons.mjs && node build.mjs"
+    "build": "node scripts/gen-icons.mjs && node build.mjs",
+    "pack": "npm run build && rm -f fullpage-shot.zip && (cd dist && zip -qr ../fullpage-shot.zip .) && echo \"打包完成 → fullpage-shot.zip（用于上传 Chrome 应用商店）\""
   },
   "dependencies": {
     "docx": "^9.6.1",
