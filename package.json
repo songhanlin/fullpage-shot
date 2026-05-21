@@ -2,6 +2,7 @@
   "name": "fullpage-shot",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "整页滚动截图、自由裁剪、导出 Word / PDF 的 Chrome 扩展",
   "type": "module",
   "scripts": {
