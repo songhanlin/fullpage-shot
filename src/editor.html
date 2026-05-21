@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>整页截图 · 裁剪导出</title>
+    <link rel="stylesheet" href="editor.css" />
+  </head>
+  <body>
+    <header id="toolbar">
+      <div class="brand">整页截图<span>裁剪 · 导出</span></div>
+      <div class="zoom" id="zoom">
+        <button data-zoom="fit" class="on">适应宽度</button>
+        <button data-zoom="100">100%</button>
+        <button data-zoom="50">50%</button>
+      </div>
+      <div class="spacer"></div>
+      <button id="selectAll" disabled>框选整页</button>
+      <button id="applyCrop" class="accent" disabled>保存裁剪</button>
+      <button id="undo" disabled>撤销</button>
+      <span class="sep"></span>
+      <button id="exportWord" class="primary" disabled>导出 Word</button>
+      <button id="exportPdf" class="primary" disabled>导出 PDF</button>
+      <button id="exportPng" disabled>导出 PNG</button>
+    </header>
+
+    <main>
+      <section id="stage">
+        <div id="hint">
+          默认已框选整页：拖拽四边或四角的小方块调整裁剪范围，框内拖动可整体移动。点「保存裁剪」把图片裁成当前选区（可多次裁剪，「撤销」可回退）。导出 Word / PDF 时图片按页宽铺满、过长自动分页；PNG 为选区原图。
+        </div>
+        <div id="canvasWrap">
+          <img id="preview" alt="整页截图预览" />
+          <div id="overlay"></div>
+        </div>
+        <div id="empty" hidden>
+          <h2>还没有截图</h2>
+          <p>点击浏览器工具栏上的扩展图标，对当前网页进行整页截图，截图完成后会自动回到本页。</p>
+        </div>
+      </section>
+    </main>
+
+    <div id="busy">
+      <div class="spin"></div>
+      <span id="busyText">处理中…</span>
+    </div>
+
+    <script src="editor.js"></script>
+  </body>
+</html>
