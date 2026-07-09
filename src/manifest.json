@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "整页截图 · 裁剪导出",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "对网页进行整页滚动截图，自由裁剪后一键导出为 Word / PDF。无需登录、无需付费。",
   "permissions": ["activeTab", "scripting", "storage", "unlimitedStorage"],
   "background": {

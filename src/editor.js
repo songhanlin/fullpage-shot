@@ -28,10 +28,14 @@ const isFull = (c) => c.x <= 0.001 && c.y <= 0.001 && c.w >= 0.999 && c.h >= 0.9
 init();
 
 async function init() {
+  // 每次截图使用独立的存储键（通过 URL 传入），兼容旧的固定键
+  const storageKey = new URLSearchParams(location.search).get('key') || 'captureData';
   let data;
   try {
-    const r = await chrome.storage.local.get('captureData');
-    data = r.captureData;
+    const r = await chrome.storage.local.get(storageKey);
+    data = r[storageKey];
+    // 数据已进入内存，立即清理存储：既防残留占盘，也保护隐私
+    chrome.storage.local.remove(storageKey);
   } catch (e) {
     log('读取截图数据失败', e);
   }
