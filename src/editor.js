@@ -11,17 +11,18 @@ const preview = $('#preview'); // 页面上显示用的 <img>
 const overlay = $('#overlay');
 const canvasWrap = $('#canvasWrap');
 
-let fullCanvas = null; // 离屏全分辨率长图（裁剪/导出的真实数据源）
+let baseCanvas = null; // 拼接出的原始长图，之后只读不改（撤销时从它重裁）
+let fullCanvas = null; // 当前视图画布（裁剪/导出的数据源）；未裁剪时与 baseCanvas 是同一对象
+let viewRect = null; // 当前视图在 baseCanvas 上的像素矩形
 let dpr = 1; // 设备像素比，用于 100% 缩放换算
 let crop = { x: 0, y: 0, w: 1, h: 1 }; // 单个裁剪框，归一化 0~1
-let history = []; // 每次「保存裁剪」前的 fullCanvas 快照，供撤销
+let history = []; // 每次「保存裁剪」前的 viewRect，供撤销
 let zoomMode = 'fit';
 let drag = null;
 
 const MAX_FULL_H = 24000; // 全分辨率长图高度上限
 const MAX_VIEW_W = 2000; // 显示用缩略图尺寸上限
 const MAX_VIEW_H = 18000;
-const HISTORY_LIMIT = 30;
 const FULL = () => ({ x: 0, y: 0, w: 1, h: 1 });
 const isFull = (c) => c.x <= 0.001 && c.y <= 0.001 && c.w >= 0.999 && c.h >= 0.999;
 
@@ -76,10 +77,10 @@ async function stitch({ meta, slices }) {
   const devH = Math.max(1, Math.round(meta.fullH * meta.dpr));
   const fullScale = devH > MAX_FULL_H ? MAX_FULL_H / devH : 1;
 
-  fullCanvas = makeCanvas(devW * fullScale, devH * fullScale);
-  const ctx = ctxOf(fullCanvas);
+  baseCanvas = makeCanvas(devW * fullScale, devH * fullScale);
+  const ctx = ctxOf(baseCanvas);
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
+  ctx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
 
   const ordered = slices.slice().sort((a, b) => a.y - b.y);
   for (let i = 0; i < ordered.length; i++) {
@@ -105,6 +106,29 @@ async function stitch({ meta, slices }) {
       Math.round(img.height * fullScale),
     );
   }
+  viewRect = { x: 0, y: 0, w: baseCanvas.width, h: baseCanvas.height };
+  fullCanvas = baseCanvas;
+}
+
+// 按 viewRect 从原图重建当前视图画布；全图时直接复用 baseCanvas，不复制
+function rebuildFullCanvas() {
+  if (viewRect.w === baseCanvas.width && viewRect.h === baseCanvas.height) {
+    fullCanvas = baseCanvas;
+    return;
+  }
+  const out = makeCanvas(viewRect.w, viewRect.h);
+  ctxOf(out).drawImage(
+    baseCanvas,
+    viewRect.x,
+    viewRect.y,
+    viewRect.w,
+    viewRect.h,
+    0,
+    0,
+    viewRect.w,
+    viewRect.h,
+  );
+  fullCanvas = out;
 }
 
 function makeCanvas(w, h) {
@@ -364,10 +388,15 @@ function targetCanvas() {
 /* ---------------- 保存裁剪 / 撤销 ---------------- */
 async function applyCrop() {
   if (isFull(crop)) return;
-  const cropped = cropToCanvas(crop);
-  if (history.length >= HISTORY_LIMIT) history.shift();
-  history.push(fullCanvas);
-  fullCanvas = cropped;
+  const p = cropPixels(crop);
+  history.push(viewRect);
+  viewRect = {
+    x: viewRect.x + p.x,
+    y: viewRect.y + p.y,
+    w: Math.min(p.w, fullCanvas.width - p.x),
+    h: Math.min(p.h, fullCanvas.height - p.y),
+  };
+  rebuildFullCanvas();
   await rebuildPreview();
   crop = FULL();
   applyZoom(zoomMode);
@@ -377,7 +406,8 @@ async function applyCrop() {
 
 async function undo() {
   if (!history.length) return;
-  fullCanvas = history.pop();
+  viewRect = history.pop();
+  rebuildFullCanvas();
   await rebuildPreview();
   crop = FULL();
   applyZoom(zoomMode);
