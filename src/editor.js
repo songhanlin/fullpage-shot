@@ -246,7 +246,7 @@ function bindUI() {
 }
 
 function enableActions(on) {
-  ['#selectAll', '#exportWord', '#exportPdf', '#exportPng'].forEach((s) => {
+  ['#selectAll', '#exportWord', '#exportPdf', '#exportPng', '#pdfFormat'].forEach((s) => {
     $(s).disabled = !on;
   });
 }
@@ -435,18 +435,29 @@ function sliceCanvas(src, bandHeight) {
 }
 
 // PDF：图片按页宽铺满，过长则自动分页（满幅，无白边）
+// 内嵌图片格式由工具栏选择：JPEG（质量 0.85，照片类页面体积可小 5-10 倍）或 PNG（无损，文字最清晰）
+const PDF_JPEG_QUALITY = 0.85;
+
 async function exportPdf() {
   const c = targetCanvas();
+  const asJpeg = $('#pdfFormat').value !== 'png';
   const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
   const pw = pdf.internal.pageSize.getWidth();
   const ph = pdf.internal.pageSize.getHeight();
   const scale = pw / c.width; // 按页宽缩放
   const bandSrcH = Math.max(1, Math.floor(ph / scale)); // 每页可容纳的源像素高度
   const bands = sliceCanvas(c, bandSrcH);
-  bands.forEach((band, i) => {
+  for (let i = 0; i < bands.length; i++) {
+    showBusy(`正在生成 PDF… (${i + 1}/${bands.length})`);
+    await tick();
+    const band = bands[i];
     if (i > 0) pdf.addPage('a4', 'p');
-    pdf.addImage(band, 'PNG', 0, 0, pw, band.height * scale);
-  });
+    if (asJpeg) {
+      pdf.addImage(band.toDataURL('image/jpeg', PDF_JPEG_QUALITY), 'JPEG', 0, 0, pw, band.height * scale);
+    } else {
+      pdf.addImage(band, 'PNG', 0, 0, pw, band.height * scale);
+    }
+  }
   downloadBlob(pdf.output('blob'), fileName('pdf'));
 }
 

@@ -20,6 +20,10 @@
       <button id="undo" disabled>撤销</button>
       <span class="sep"></span>
       <button id="exportWord" class="primary" disabled>导出 Word</button>
+      <select id="pdfFormat" title="PDF 内嵌图片格式：JPEG 体积小（适合照片类页面），PNG 无损（适合文字页面）" disabled>
+        <option value="jpeg" selected>JPEG · 体积小</option>
+        <option value="png">PNG · 文字更清晰</option>
+      </select>
       <button id="exportPdf" class="primary" disabled>导出 PDF</button>
       <button id="exportPng" disabled>导出 PNG</button>
     </header>
@@ -27,7 +31,7 @@
     <main>
       <section id="stage">
         <div id="hint">
-          默认已框选整页：拖拽四边或四角的小方块调整裁剪范围，框内拖动可整体移动。点「保存裁剪」把图片裁成当前选区（可多次裁剪，「撤销」可回退）。导出 Word / PDF 时图片按页宽铺满、过长自动分页；PNG 为选区原图。
+          默认已框选整页：拖拽四边或四角的小方块调整裁剪范围，框内拖动可整体移动。点「保存裁剪」把图片裁成当前选区（可多次裁剪，「撤销」可回退）。导出 Word / PDF 时图片按页宽铺满、过长自动分页；PDF 可选内嵌 JPEG（体积小，适合照片类页面）或 PNG（无损，文字最清晰）；PNG 为选区原图。
         </div>
         <div id="canvasWrap">
           <img id="preview" alt="整页截图预览" />

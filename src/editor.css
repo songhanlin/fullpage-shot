@@ -127,6 +127,26 @@ body {
   cursor: not-allowed;
 }
 
+#toolbar > select {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #334155;
+  color: #fff;
+  cursor: pointer;
+}
+
+#toolbar > select:hover:not(:disabled) {
+  background: #475569;
+}
+
+#toolbar > select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---------- 主体 ---------- */
 main {
   flex: 1;
