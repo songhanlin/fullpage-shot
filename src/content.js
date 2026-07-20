@@ -47,13 +47,24 @@
   );
 
   // ---- 收集 fixed / sticky 元素：只在第一屏保留，其后隐藏避免重复出现 ----
+  // TreeWalker 递归进 open shadowRoot（自定义组件里的悬浮栏也能扫到；closed 的无法访问），
+  // 并整树跳过 script/style 等无渲染节点，减少超大 DOM 上的 getComputedStyle 调用
+  const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'LINK', 'META', 'TEMPLATE', 'NOSCRIPT', 'TITLE']);
   const stickies = [];
-  document.querySelectorAll('*').forEach((el) => {
-    const pos = getComputedStyle(el).position;
-    if (pos === 'fixed' || pos === 'sticky') {
-      stickies.push({ el, vis: el.style.visibility });
+  const collectStickies = (root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+      acceptNode: (el) =>
+        SKIP_TAGS.has(el.tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+    });
+    for (let el = walker.nextNode(); el; el = walker.nextNode()) {
+      const pos = getComputedStyle(el).position;
+      if (pos === 'fixed' || pos === 'sticky') {
+        stickies.push({ el, vis: el.style.visibility });
+      }
+      if (el.shadowRoot) collectStickies(el.shadowRoot);
     }
-  });
+  };
+  collectStickies(docEl);
   const hideStickies = () =>
     stickies.forEach((s) => {
       s.el.style.visibility = 'hidden';
