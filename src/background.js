@@ -4,6 +4,16 @@
 // 按 tabId 隔离分片，避免多个标签页同时截图时数据互相混入
 const captures = new Map();
 
+// 抓取可见区域；失败（常见为 MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND 限频）时退避 600ms 重试一次
+async function captureWithRetry(winId) {
+  try {
+    return await chrome.tabs.captureVisibleTab(winId, { format: 'png' });
+  } catch (_) {
+    await new Promise((r) => setTimeout(r, 600));
+    return chrome.tabs.captureVisibleTab(winId, { format: 'png' });
+  }
+}
+
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab || tab.id == null) return;
   const url = tab.url || '';
@@ -35,8 +45,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return false;
     }
     const winId = sender.tab.windowId;
-    chrome.tabs
-      .captureVisibleTab(winId, { format: 'png' })
+    captureWithRetry(winId)
       .then((dataUrl) => {
         const slices = captures.get(tabId);
         if (slices) slices.push({ y: msg.y, dataUrl });
